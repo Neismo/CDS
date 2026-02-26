@@ -35,19 +35,36 @@ X_fixed = np.random.multivariate_normal(mean, cov, n_samples)
 # 3. Predict at x_eval.
 # 4. Calculate empirical Bias^2 and Variance.
 
+lambda_preds = []
 bias_sq = []
 variance = []
 
 print('Simulating Ridge complexity sweep...')
-# YOUR CODE HERE
+for l in lambdas:
+    all_preds = []
+    for _ in range(n_simulations):
+        y = X_fixed @ beta_true + np.random.normal(0, sigma, n_samples)
+        ridge_coeff = (X_fixed.T @ X_fixed + np.eye(2) * l)**-1 @ X_fixed.T @ y
+        pred = x_eval @ ridge_coeff
+        all_preds.append(pred[0])
+    lambda_preds.append(all_preds)
+    bias_sq.append((np.mean(all_preds) - target_val)**2)
+    variance.append(np.var(all_preds))
 
+print(variance[5], bias_sq[5])
 
 # --- SECTION 3: Visualization ---
 # TASK: Plot Bias^2, Variance, and Total (Bias^2 + Var) vs Lambdas.
 # Remember to invert the x-axis for complexity.
 
-# plt.figure(figsize=(10, 6))
-# ...
-# plt.xscale('log')
-# plt.gca().invert_xaxis()
-# plt.show()
+plt.figure(figsize=(10, 6))
+plt.plot(lambdas, bias_sq, label='Bias²', marker='o')
+plt.plot(lambdas, variance, label='Variance', marker='o')
+plt.plot(lambdas, np.array(bias_sq) + np.array(variance), label='Total Error', marker='o')
+# Plot vertical line a lowest total error
+min_total_idx = np.argmin(np.array(bias_sq) + np.array(variance))
+plt.axvline(x=lambdas[min_total_idx], color='gray', linestyle='--', label='Min Total Error')
+plt.xscale('log')
+plt.gca().invert_xaxis()
+plt.legend()
+plt.show()
